@@ -15,7 +15,7 @@ pipeline {
         // Stage 2: Install Dependencies (Backend)
         stage('Install Backend') {
             steps {
-                dir('backend') {
+                dir('todo-app/backend') {
                     sh 'npm install'
                 }
             }
@@ -24,7 +24,7 @@ pipeline {
         // Stage 2b: Install Dependencies (Frontend)
         stage('Install Frontend') {
             steps {
-                dir('frontend') {
+                dir('todo-app/frontend') {
                     sh 'npm install'
                 }
             }
@@ -33,7 +33,7 @@ pipeline {
         // Stage 3: Build Backend (if applicable)
         stage('Build Backend') {
             steps {
-                dir('backend') {
+                dir('todo-app/backend') {
                     sh 'npm run build || echo "No build script in backend, continuing"'
                 }
             }
@@ -42,7 +42,7 @@ pipeline {
         // Stage 3b: Build Frontend (React/TypeScript)
         stage('Build Frontend') {
             steps {
-                dir('frontend') {
+                dir('todo-app/frontend') {
                     sh 'npm run build'
                 }
             }
@@ -51,7 +51,7 @@ pipeline {
         // Stage 4: Run Backend Unit Tests
         stage('Test Backend') {
             steps {
-                dir('backend') {
+                dir('todo-app/backend') {
                     sh 'npm test || echo "No test script in backend, continuing"'
                 }
             }
@@ -65,7 +65,7 @@ pipeline {
         // Stage 4b: Run Frontend Unit Tests
         stage('Test Frontend') {
             steps {
-                dir('frontend') {
+                dir('todo-app/frontend') {
                     sh 'npm test || echo "No test script in frontend, continuing"'
                 }
             }
