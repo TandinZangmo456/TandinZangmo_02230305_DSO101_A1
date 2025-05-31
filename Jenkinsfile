@@ -85,7 +85,7 @@ pipeline {
                     
                     // Push to Docker Hub (requires credentials)
                     withCredentials([string(credentialsId: 'docker-hub-creds', variable: 'DOCKER_PWD')]) {
-                        sh 'echo $DOCKER_PWD | docker login -u pengiuntandinzangmo --password-stdin'
+                        sh 'echo $DOCKER_PWD | docker login -u penguintandinzangmo --password-stdin'
                         sh 'docker push penguintandinzangmo/node-app:latest'
                     }
                 }
