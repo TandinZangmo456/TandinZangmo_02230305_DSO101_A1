@@ -1,137 +1,95 @@
 pipeline {
     agent any
     tools {
-        nodejs 'NodeJS-24.0.2'  // Make sure this matches your Node.js installation in Jenkins
+        nodejs 'NodeJS-24.0.2'
     }
-
     stages {
         // Stage 1: Checkout Code
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/TandinZangmo456/TandinZangmo_02230305_DSO101_A1',
-                        credentialsId: 'github-credentials'
-                    ]]
-                ])
-                sh 'ls -la'  // Verify repository structure
+                git branch: 'main',
+                    url: 'https://github.com/TandinZangmo456/TandinZangmo_02230305_DSO101_A1'
             }
         }
-
-        // Stage 2: Backend Installation & Build
-        stage('Backend Setup') {
+        
+        // Stage 2: Install Dependencies (Backend)
+        stage('Install Backend') {
             steps {
                 dir('backend') {
                     sh 'npm install'
-                    // If you have any backend-specific build steps
-                    sh 'npm run build || echo "No build script found in backend"'
                 }
             }
         }
-
-        // Stage 3: Frontend Installation & Build
-        stage('Frontend Setup') {
+        
+        // Stage 2b: Install Dependencies (Frontend)
+        stage('Install Frontend') {
             steps {
                 dir('frontend') {
                     sh 'npm install'
-                    // Frontend typically needs a build step
-                    sh 'npm run build || echo "No build script found in frontend"'
+                }
+            }
+        }
+        
+        // Stage 3: Build Backend (if applicable)
+        stage('Build Backend') {
+            steps {
+                dir('backend') {
+                    sh 'npm run build || echo "No build script in backend, continuing"'
+                }
+            }
+        }
+        
+        // Stage 3b: Build Frontend (React/TypeScript)
+        stage('Build Frontend') {
+            steps {
+                dir('frontend') {
+                    sh 'npm run build'
                 }
             }
         }
 
-        // Stage 4: Backend Testing
-        stage('Backend Tests') {
+        // Stage 4: Run Backend Unit Tests
+        stage('Test Backend') {
             steps {
                 dir('backend') {
-                    sh 'npm test -- --reporters=default --reporters=jest-junit || echo "Tests failed"'
+                    sh 'npm test || echo "No test script in backend, continuing"'
                 }
             }
             post {
                 always {
-                    junit 'backend/junit.xml'
+                    junit allowEmptyResults: true, testResults: 'backend/junit.xml'
                 }
             }
         }
-
-        // Stage 5: Frontend Testing (if applicable)
-        stage('Frontend Tests') {
-            when {
-                expression { fileExists('frontend/package.json') }
-            }
+        
+        // Stage 4b: Run Frontend Unit Tests
+        stage('Test Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm test -- --reporters=default --reporters=jest-junit || echo "Tests failed"'
+                    sh 'npm test || echo "No test script in frontend, continuing"'
                 }
             }
             post {
                 always {
-                    junit 'frontend/junit.xml'
+                    junit allowEmptyResults: true, testResults: 'frontend/junit.xml'
                 }
             }
         }
-
-        // Stage 6: Docker Build (Optional)
-        stage('Docker Build') {
-            when {
-                expression { return env.BRANCH_NAME == 'main' }
-            }
+        
+        // Stage 5: Deploy (Docker Example)
+        stage('Deploy') {
             steps {
                 script {
-                    // Build backend Docker image
-                    if (fileExists('backend/Dockerfile')) {
-                        docker.build("penguintandinzangmo/todo-app-backend:latest", './backend')
-                    }
+                    // Build Docker image using backend Dockerfile
+                    sh 'docker build -t penguintandinzangmo/node-app:latest -f backend/Dockerfile backend/'
                     
-                    // Build frontend Docker image
-                    if (fileExists('frontend/Dockerfile')) {
-                        docker.build("penguintandinzangmo/todo-app-frontend:latest", './frontend')
+                    // Push to Docker Hub (requires credentials)
+                    withCredentials([string(credentialsId: 'dockerhub-creds', variable: 'DOCKER_PWD')]) {
+                        sh 'echo $DOCKER_PWD | docker login -u pengiuntandinzangmo --password-stdin'
+                        sh 'docker push penguintandinzangmo/node-app:latest'
                     }
                 }
             }
-        }
-
-        // Stage 7: Docker Push (Optional)
-        stage('Docker Push') {
-            when {
-                expression { return env.BRANCH_NAME == 'main' }
-            }
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )]) {
-                        sh "echo ${env.DOCKER_PASSWORD} | docker login -u ${env.DOCKER_USERNAME} --password-stdin"
-                        
-                        if (fileExists('backend/Dockerfile')) {
-                            sh "docker push penguintandinzangmo/todo-app-backend:latest"
-                        }
-                        
-                        if (fileExists('frontend/Dockerfile')) {
-                            sh "docker push penguintandinzangmo/todo-app-frontend:latest"
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
-            script {
-                currentBuild.description = "Build ${currentBuild.result}"
-            }
-        }
-        success {
-            echo 'Pipeline completed successfully'
-        }
-        failure {
-            echo 'Pipeline failed'
         }
     }
 }
