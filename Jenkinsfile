@@ -81,7 +81,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image using backend Dockerfile
-                    sh 'docker build -t penguintandinzangmo/node-app:latest -f backend/Dockerfile backend/'
+                    sh 'docker build -t penguintandinzangmo/node-app:latest -f todo-app/backend/Dockerfile backend/'
                     
                     // Push to Docker Hub (requires credentials)
                     withCredentials([string(credentialsId: 'dockerhub-creds', variable: 'DOCKER_PWD')]) {
