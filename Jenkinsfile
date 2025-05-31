@@ -84,7 +84,7 @@ pipeline {
                     sh 'docker build -t penguintandinzangmo/node-app:latest -f todo-app/backend/Dockerfile todo-app/backend/'
                     
                     // Push to Docker Hub (requires credentials)
-                    withCredentials([string(credentialsId: 'dockerhub-creds', variable: 'DOCKER_PWD')]) {
+                    withCredentials([string(credentialsId: 'docker-hub-creds', variable: 'DOCKER_PWD')]) {
                         sh 'echo $DOCKER_PWD | docker login -u pengiuntandinzangmo --password-stdin'
                         sh 'docker push penguintandinzangmo/node-app:latest'
                     }
