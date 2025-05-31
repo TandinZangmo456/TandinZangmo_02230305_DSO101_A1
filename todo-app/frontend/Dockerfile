@@ -9,7 +9,7 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Create default nginx.conf if it doesn't exist in build context
+# Create default nginx.conf
 RUN echo "server { \
     listen 80; \
     server_name localhost; \
@@ -27,8 +27,8 @@ RUN echo "server { \
 # Copy built assets from build stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Override with custom nginx.conf if provided
-COPY nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || echo "Using default nginx configuration"
+# Attempt to copy custom nginx.conf (silent if missing)
+COPY nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || echo "Using default nginx configuration" > /dev/null
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
