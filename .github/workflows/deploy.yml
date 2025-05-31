@@ -34,8 +34,9 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest
 
-      # 5. Deploy to Render.com (via webhook)
+       # 5. Deploy to Render.com
       - name: Trigger Backend Deployment on Render
+        if: ${{ secrets.RENDER_API_KEY && secrets.RENDER_BACKEND_SERVICE_ID }}
         run: |
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
@@ -44,6 +45,7 @@ jobs:
             "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys"
 
       - name: Trigger Frontend Deployment on Render
+        if: ${{ secrets.RENDER_API_KEY && secrets.RENDER_FRONTEND_SERVICE_ID }}
         run: |
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
