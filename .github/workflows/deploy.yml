@@ -34,19 +34,19 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest
 
-      # 5. DEPLOY TO RENDER (NO IFS, JUST RUN IT!)
-      - name: Trigger Backend Deployment on Render
+      # 5. FORCE Render Deployment (NEW APPROACH)
+      - name: Nuclear Render Deploy
         run: |
-          curl -X POST \
+          # Backend deploy
+          curl -v -X POST \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"serviceId":"${{ secrets.RENDER_BACKEND_SERVICE_ID }}"}' \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys"
-
-      - name: Trigger Frontend Deployment on Render
-        run: |
-          curl -X POST \
+            -d '{"clearCache": "do_not_clear"}' \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" || echo "Backend deploy failed but continuing..."
+          
+          # Frontend deploy
+          curl -v -X POST \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"serviceId":"${{ secrets.RENDER_FRONTEND_SERVICE_ID }}"}' \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys"
+            -d '{"clearCache": "do_not_clear"}' \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" || echo "Frontend deploy failed but continuing..."
