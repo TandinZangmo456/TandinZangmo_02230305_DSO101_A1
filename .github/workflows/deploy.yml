@@ -34,19 +34,18 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest
 
-      # 5. FORCE Render Deployment (NEW APPROACH)
-      - name: Nuclear Render Deploy
+      # 5. Deploy Backend to Render.com
+      - name: Deploy Backend to Render
         run: |
-          # Backend deploy
-          curl -v -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"clearCache": "do_not_clear"}' \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" || echo "Backend deploy failed but continuing..."
-          
-          # Frontend deploy
-          curl -v -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"clearCache": "do_not_clear"}' \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" || echo "Frontend deploy failed but continuing..."
+          # If you have a deploy hook for the backend:
+          curl -X POST ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+        # If webhook isn't available, you can add conditional execution:
+        continue-on-error: true
+      
+      # 6. Deploy Frontend to Render.com
+      - name: Deploy Frontend to Render
+        run: |
+          # If you have a deploy hook for the frontend:
+          curl -X POST ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}
+        # If webhook isn't available, you can add conditional execution:
+        continue-on-error: true
